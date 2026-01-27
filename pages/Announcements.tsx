@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { Announcement, Event } from '../types';
-import { Megaphone, Calendar, Trash2, Plus, UserCircle, Send, X, MapPin, AlignLeft } from 'lucide-react';
+import { Megaphone, Calendar, Trash2, Plus, Send, X, MapPin, AlignLeft, Info } from 'lucide-react';
 
 interface AnnouncementsProps {
   list: Announcement[];
@@ -29,7 +29,7 @@ const Announcements: React.FC<AnnouncementsProps> = ({ list, isAdmin, onAdd, onA
         title,
         content,
         date: new Date().toISOString(),
-        authorId: 'admin-1'
+        authorId: 'current' // Handled by App.tsx logic
       });
     } else {
       onAddEvent({
@@ -40,12 +40,13 @@ const Announcements: React.FC<AnnouncementsProps> = ({ list, isAdmin, onAdd, onA
         location: location || 'TBA',
         attendees: []
       });
+      // Optionally add a matching announcement
       onAdd({
         id: id + '_ann',
-        title: `New Event: ${title}`,
-        content: `Check out our upcoming event at ${location || 'TBA'}!`,
+        title: `Event: ${title}`,
+        content: `New event scheduled for ${date || 'soon'} at ${location || 'TBA'}.`,
         date: new Date().toISOString(),
-        authorId: 'admin-1'
+        authorId: 'current'
       });
     }
 
@@ -58,27 +59,30 @@ const Announcements: React.FC<AnnouncementsProps> = ({ list, isAdmin, onAdd, onA
 
   return (
     <div className="max-w-4xl mx-auto space-y-10 animate-in fade-in duration-500">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-6">
         <div>
-          <h2 className="text-4xl font-black text-slate-900 tracking-tight">Organization Feed</h2>
-          <p className="text-slate-500 font-medium">Updates, news, and official statements</p>
+          <h2 className="text-3xl lg:text-4xl font-black text-slate-900 tracking-tight">Community Feed</h2>
+          <p className="text-slate-500 font-medium">Official bulletins and organization updates</p>
         </div>
         {isAdmin && (
           <button 
             onClick={() => setIsPosting(true)}
-            className="flex items-center gap-3 bg-blue-600 text-white px-8 py-4 rounded-3xl font-black hover:bg-blue-700 shadow-xl shadow-blue-100 transition-all transform hover:-translate-y-1"
+            className="flex items-center gap-3 bg-slate-900 text-white px-6 lg:px-8 py-4 rounded-[1.5rem] lg:rounded-[2rem] font-black text-xs lg:text-sm hover:bg-slate-800 shadow-xl shadow-slate-200 transition-all transform hover:-translate-y-1 active:scale-95 shrink-0"
           >
             <Plus className="w-5 h-5" />
-            Create Post
+            Create Entry
           </button>
         )}
       </div>
 
       {isPosting && (
-        <div className="bg-white p-8 rounded-[3rem] border-2 border-blue-50 aesthetic-shadow animate-in slide-in-from-top-6 duration-500">
+        <div className="bg-white p-8 rounded-[3rem] border border-slate-100 shadow-2xl shadow-sky-100/30 animate-in slide-in-from-top-6 duration-500">
           <div className="flex items-center justify-between mb-8">
             <h3 className="text-2xl font-black text-slate-800">New Publication</h3>
-            <button onClick={() => setIsPosting(false)} className="p-2 text-slate-400 hover:text-rose-500 bg-slate-50 rounded-xl transition-all">
+            <button 
+              onClick={() => setIsPosting(false)} 
+              className="p-3 text-slate-400 hover:text-rose-500 bg-slate-50 rounded-2xl transition-all active:scale-90"
+            >
               <X className="w-5 h-5" />
             </button>
           </div>
@@ -88,51 +92,51 @@ const Announcements: React.FC<AnnouncementsProps> = ({ list, isAdmin, onAdd, onA
               <button 
                 type="button" 
                 onClick={() => setPostType('UPDATE')}
-                className={`px-6 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${postType === 'UPDATE' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-400'}`}
+                className={`px-6 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${postType === 'UPDATE' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
               >
                 Bulletin
               </button>
               <button 
                 type="button" 
                 onClick={() => setPostType('EVENT')}
-                className={`px-6 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${postType === 'EVENT' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-400'}`}
+                className={`px-6 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${postType === 'EVENT' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
               >
-                Event
+                Calendar
               </button>
             </div>
 
             <div className="space-y-4">
-              <div className="relative">
-                <AlignLeft className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+              <div className="relative group">
+                <AlignLeft className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-300 group-focus-within:text-slate-900 transition-colors" />
                 <input 
                   type="text" 
                   required
-                  placeholder="Subject Header"
+                  placeholder="Subject Heading"
                   value={title}
                   onChange={e => setTitle(e.target.value)}
-                  className="w-full pl-12 pr-4 py-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-blue-600 outline-none font-bold"
+                  className="w-full pl-12 pr-4 py-5 bg-slate-50 border border-slate-100 rounded-[1.5rem] focus:ring-4 focus:ring-slate-100 outline-none font-bold text-lg placeholder:text-slate-200"
                 />
               </div>
 
               {postType === 'EVENT' && (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="relative">
-                    <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+                  <div className="relative group">
+                    <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-300 group-focus-within:text-slate-900" />
                     <input 
                       type="text" 
-                      placeholder="Venue"
+                      placeholder="Meeting Venue"
                       value={location}
                       onChange={e => setLocation(e.target.value)}
-                      className="w-full pl-12 pr-4 py-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-blue-600 outline-none"
+                      className="w-full pl-12 pr-4 py-5 bg-slate-50 border border-slate-100 rounded-[1.5rem] focus:ring-4 focus:ring-slate-100 outline-none font-bold"
                     />
                   </div>
-                  <div className="relative">
-                    <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+                  <div className="relative group">
+                    <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-300 group-focus-within:text-slate-900" />
                     <input 
                       type="date" 
                       value={date}
                       onChange={e => setDate(e.target.value)}
-                      className="w-full pl-12 pr-4 py-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-blue-600 outline-none"
+                      className="w-full pl-12 pr-4 py-5 bg-slate-50 border border-slate-100 rounded-[1.5rem] focus:ring-4 focus:ring-slate-100 outline-none font-bold"
                     />
                   </div>
                 </div>
@@ -140,19 +144,19 @@ const Announcements: React.FC<AnnouncementsProps> = ({ list, isAdmin, onAdd, onA
 
               <textarea 
                 required
-                placeholder="Compose your message..."
+                placeholder="Compose details..."
                 value={content}
                 onChange={e => setContent(e.target.value)}
-                className="w-full p-6 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-blue-600 outline-none h-40 resize-none font-medium"
+                className="w-full p-8 bg-slate-50 border border-slate-100 rounded-[2rem] focus:ring-4 focus:ring-slate-100 outline-none h-48 resize-none font-medium text-lg placeholder:text-slate-200"
               />
             </div>
 
             <button 
               type="submit"
-              className="w-full py-5 bg-blue-600 text-white rounded-[2rem] font-black text-lg flex items-center justify-center gap-3 shadow-xl shadow-blue-100 hover:bg-blue-700 transition-all active:scale-95"
+              className="w-full py-6 bg-slate-900 text-white rounded-[2.2rem] font-black text-lg flex items-center justify-center gap-3 shadow-2xl shadow-slate-200 hover:bg-slate-800 transition-all active:scale-[0.98]"
             >
               <Send className="w-6 h-6" />
-              Publish Post
+              Publish to Hub
             </button>
           </form>
         </div>
@@ -160,32 +164,42 @@ const Announcements: React.FC<AnnouncementsProps> = ({ list, isAdmin, onAdd, onA
 
       <div className="space-y-6">
         {list.length === 0 ? (
-          <div className="text-center py-24 bg-white rounded-[3.5rem] border border-slate-100 aesthetic-shadow">
-            <Megaphone className="w-16 h-16 text-slate-100 mx-auto mb-4" />
-            <p className="text-slate-400 font-black text-xl">The feed is currently empty</p>
+          <div className="text-center py-32 bg-white rounded-[3.5rem] border border-slate-100 flex flex-col items-center gap-6">
+            <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center">
+              <Megaphone className="w-10 h-10 text-slate-200" />
+            </div>
+            <div>
+              <p className="text-slate-400 font-black text-xl tracking-tight uppercase">No bulletins</p>
+              <p className="text-slate-300 text-sm mt-1 font-bold">Organization updates will appear here</p>
+            </div>
           </div>
         ) : (
           list.map(ann => (
-            <div key={ann.id} className="group relative bg-white p-8 rounded-[3rem] border border-slate-100 aesthetic-shadow hover:border-blue-100 transition-all duration-500">
+            <div key={ann.id} className="group relative bg-white p-8 lg:p-12 rounded-[3rem] border border-slate-100 hover:border-sky-100 transition-all duration-500 shadow-sm hover:shadow-xl hover:shadow-sky-50/50">
               <div className="flex flex-col md:flex-row gap-8">
                 <div className="flex-1">
-                  <div className="flex items-center gap-4 mb-5">
-                    <div className="p-3 bg-blue-50 text-blue-600 rounded-2xl group-hover:bg-blue-600 group-hover:text-white transition-all">
+                  <div className="flex items-center gap-5 mb-6">
+                    <div className="p-4 bg-sky-50 text-sky-600 rounded-[1.5rem] group-hover:bg-slate-900 group-hover:text-white transition-all shadow-sm">
                       <Megaphone className="w-6 h-6" />
                     </div>
                     <div>
-                      <h3 className="text-xl font-black text-slate-800 leading-tight">{ann.title}</h3>
-                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">
-                        {new Date(ann.date).toLocaleDateString(undefined, { month: 'long', day: 'numeric' })} • Faculty Post
-                      </p>
+                      <h3 className="text-2xl font-black text-slate-800 leading-tight">{ann.title}</h3>
+                      <div className="flex items-center gap-3 mt-1.5">
+                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                          {new Date(ann.date).toLocaleDateString()}
+                        </p>
+                        <span className="w-1 h-1 bg-slate-200 rounded-full" />
+                        <span className="text-[10px] font-black text-sky-500 uppercase tracking-widest flex items-center gap-1">
+                          <Info className="w-3 h-3" /> Official
+                        </span>
+                      </div>
                     </div>
                   </div>
-                  <p className="text-slate-600 leading-relaxed font-medium">{ann.content}</p>
+                  <p className="text-slate-600 leading-relaxed font-medium text-lg">{ann.content}</p>
                 </div>
-                
                 {isAdmin && (
-                  <button onClick={() => onDelete(ann.id)} className="self-start p-3 text-slate-300 hover:text-rose-500 hover:bg-rose-50 rounded-xl transition-all">
-                    <Trash2 className="w-5 h-5" />
+                  <button onClick={() => onDelete(ann.id)} className="self-start p-4 text-slate-300 hover:text-rose-500 hover:bg-rose-50 rounded-2xl transition-all active:scale-90">
+                    <Trash2 className="w-6 h-6" />
                   </button>
                 )}
               </div>
