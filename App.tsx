@@ -3,7 +3,8 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { initializeApp, getApps } from "firebase/app";
 import { 
   getFirestore, collection, onSnapshot, doc, 
-  setDoc, updateDoc, deleteDoc, query, orderBy 
+  setDoc, updateDoc, deleteDoc, query, orderBy,
+  initializeFirestore, memoryLocalCache, terminate
 } from "firebase/firestore";
 
 import { 
@@ -21,7 +22,7 @@ import Register from './pages/Register';
 import AdminDashboard from './pages/AdminDashboard';
 import Profile from './pages/Profile';
 import Modal from './components/Modal';
-import { Loader2, CloudOff, CloudCheck, ExternalLink, RefreshCw, Database, AlertCircle, ShieldAlert, CheckCircle2, Circle, Wifi, WifiOff, Trash2, ShieldCheck, Zap } from 'lucide-react';
+import { Loader2, RefreshCw, AlertCircle, Wifi, WifiOff, Activity, Zap } from 'lucide-react';
 
 const firebaseConfig = {
   apiKey: "AIzaSyCsr48rSLUsMYVRxaIGD6gjLJ1vd5dAMWY",
@@ -39,7 +40,10 @@ let db: any = null;
 if (isCloudConfigured) {
   try {
     const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
-    db = getFirestore(app);
+    // CRITICAL FIX: Use memoryLocalCache to prevent ghost data from returning after refresh
+    db = initializeFirestore(app, {
+      localCache: memoryLocalCache()
+    });
   } catch (e) {
     console.error("Firebase init failed:", e);
   }
@@ -79,47 +83,39 @@ const App: React.FC = () => {
     return () => setLoading(false);
   }, []);
 
-  // MASTER SYNC LOGIC
+  // MASTER SYNC LOGIC - Laging nakikinig sa Cloud
   useEffect(() => {
     let unsubs: (() => void)[] = [];
     if (db) {
       const handleError = (err: any) => {
         console.error("Sync Error:", err);
-        if (err.code === 'permission-denied') setDbStatus('ERROR');
+        if (err.code === 'permission-denied') {
+          setDbStatus('ERROR');
+          setSyncError("Cloud Permission Denied: Please check your Firebase Security Rules.");
+        }
       };
       
       try {
         setDbStatus('SYNCING');
+        // Ang onSnapshot dito ay diretso na sa Cloud dahil naka-memory cache tayo
         unsubs = [
           onSnapshot(collection(db, "users"), snap => {
-            const data = snap.docs.map(d => ({ id: d.id, ...d.data() } as User));
-            setUsers(data);
-            localStorage.setItem('db_users', JSON.stringify(data));
+            setUsers(snap.docs.map(d => ({ id: d.id, ...d.data() } as User)));
           }, handleError),
           onSnapshot(query(collection(db, "events"), orderBy("date", "desc")), snap => {
-            const data = snap.docs.map(d => ({ id: d.id, ...d.data() } as Event));
-            setEvents(data);
-            localStorage.setItem('db_events', JSON.stringify(data));
+            setEvents(snap.docs.map(d => ({ id: d.id, ...d.data() } as Event)));
           }, handleError),
           onSnapshot(query(collection(db, "announcements"), orderBy("date", "desc")), snap => {
-            const data = snap.docs.map(d => ({ id: d.id, ...d.data() } as Announcement));
-            setAnnouncements(data);
-            localStorage.setItem('db_announcements', JSON.stringify(data));
+            setAnnouncements(snap.docs.map(d => ({ id: d.id, ...d.data() } as Announcement)));
           }, handleError),
           onSnapshot(collection(db, "gallery"), snap => {
-            const data = snap.docs.map(d => ({ id: d.id, ...d.data() } as GalleryItem));
-            setGallery(data);
-            localStorage.setItem('db_gallery', JSON.stringify(data));
+            setGallery(snap.docs.map(d => ({ id: d.id, ...d.data() } as GalleryItem)));
           }, handleError),
           onSnapshot(collection(db, "requests"), snap => {
-            const data = snap.docs.map(d => ({ id: d.id, ...d.data() } as UserRequest));
-            setRequests(data);
-            localStorage.setItem('db_requests', JSON.stringify(data));
+            setRequests(snap.docs.map(d => ({ id: d.id, ...d.data() } as UserRequest)));
           }, handleError),
           onSnapshot(query(collection(db, "messages"), orderBy("timestamp", "asc")), snap => {
-            const data = snap.docs.map(d => ({ id: d.id, ...d.data() } as Message));
-            setMessages(data);
-            localStorage.setItem('db_messages', JSON.stringify(data));
+            setMessages(snap.docs.map(d => ({ id: d.id, ...d.data() } as Message)));
           }, handleError)
         ];
         setDbStatus('CONNECTED');
@@ -138,15 +134,9 @@ const App: React.FC = () => {
         const docRef = doc(db, collectionName, targetId);
         
         if (action === 'DELETE') {
-          // STEP 1: Burahin sa UI agad (Optimistic)
-          const setters: any = { users: setUsers, events: setEvents, announcements: setAnnouncements, gallery: setGallery, requests: setRequests };
-          if (setters[collectionName]) {
-            setters[collectionName]((prev: any[]) => prev.filter(item => item.id !== targetId));
-          }
-          
-          // STEP 2: Burahin sa Server
+          // STEP 1: Burahin sa server at maghintay ng confirmation
           await deleteDoc(docRef);
-          console.log(`[CLOUD] Success delete: ${collectionName}/${targetId}`);
+          console.log(`[STRICT DELETE] Permanently removed from cloud: ${collectionName}/${targetId}`);
         } else if (action === 'ADD' || action === 'SET') {
           await setDoc(docRef, data);
         } else if (action === 'UPDATE') {
@@ -155,21 +145,23 @@ const App: React.FC = () => {
         
         setDbStatus('CONNECTED');
       } catch (err: any) {
-        console.error(`[DB ERROR]`, err);
+        console.error(`[DB ACTION FAILED]`, err);
         setDbStatus('ERROR');
         setSyncError(err.message);
         
         if (err.code === 'permission-denied') {
-          alert("ERROR: Permission Denied! Hindi nadelete sa server kaya babalik ang data. I-update ang Firebase Rules mo.");
-          window.location.reload(); // Force reload to show actual server state
+          alert("DELETE FAILED: Tinanggihan ng Firebase Rules ang pag-delete. Hindi ito mabubura hangga't hindi inaayos ang rules sa console. Kaya ito bumabalik.");
+          window.location.reload(); // Force refresh to show server truth
         }
+        throw err;
       }
     }
   };
 
-  const nuclearReset = () => {
-    if (confirm("Nuclear Reset: Buburahin ang local cache at pipilitin ang app na kumuha ng fresh data mula sa Cloud. Itutuloy?")) {
+  const nuclearReset = async () => {
+    if (confirm("GHOST DATA CLEANUP: Buburahin ang lahat ng browser memory para siguradong fresh data lang mula sa server ang makikita. Itutuloy?")) {
       localStorage.clear();
+      if (db) await terminate(db);
       window.location.reload();
     }
   };
@@ -222,23 +214,25 @@ const App: React.FC = () => {
       )}
       
       <main className="flex-1 container mx-auto px-4 py-8">
-        <div className="flex justify-end gap-2 mb-4">
-           <button 
-              onClick={nuclearReset}
-              className="flex items-center gap-2 px-4 py-1.5 rounded-full text-[9px] font-black uppercase tracking-[0.2em] bg-rose-50 border border-rose-100 text-rose-600 hover:bg-rose-600 hover:text-white transition-all shadow-sm"
-           >
-              <Zap className="w-3.5 h-3.5" /> Nuclear Sync Reset
-           </button>
+        <div className="flex justify-end items-center gap-3 mb-8">
            <button 
               onClick={() => setShowErrorModal(true)}
-              className={`flex items-center gap-2 px-4 py-1.5 rounded-full text-[9px] font-black uppercase tracking-[0.2em] transition-all shadow-sm ${
-                dbStatus === 'ERROR' ? 'bg-rose-50 text-rose-600 border border-rose-100' : 
-                dbStatus === 'SYNCING' ? 'bg-sky-50 text-sky-600 animate-pulse border border-sky-100' :
-                'bg-emerald-50 text-emerald-600 border border-emerald-100'
+              className={`flex items-center gap-2 px-4 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-[0.2em] border transition-all shadow-sm ${
+                dbStatus === 'ERROR' ? 'bg-rose-50 text-rose-600 border-rose-100' : 
+                dbStatus === 'SYNCING' ? 'bg-sky-50 text-sky-600 border-sky-100' :
+                'bg-emerald-50 text-emerald-600 border-emerald-100'
               }`}
            >
-              {dbStatus === 'ERROR' ? <WifiOff className="w-4 h-4" /> : <Wifi className="w-4 h-4" />}
-              {dbStatus === 'ERROR' ? 'Cloud Blocked' : dbStatus === 'SYNCING' ? 'Syncing...' : 'Cloud Active'}
+              <div className={`w-1.5 h-1.5 rounded-full ${dbStatus === 'ERROR' ? 'bg-rose-500 animate-pulse' : dbStatus === 'SYNCING' ? 'bg-sky-500 animate-ping' : 'bg-emerald-500'}`} />
+              Cloud Health
+           </button>
+
+           <button 
+              onClick={nuclearReset}
+              className="p-1.5 bg-white border border-slate-100 text-slate-400 hover:text-rose-500 rounded-lg shadow-sm transition-all"
+              title="Fix Ghost Data"
+           >
+              <Zap className="w-3.5 h-3.5" />
            </button>
         </div>
 
@@ -253,18 +247,30 @@ const App: React.FC = () => {
       <Modal isOpen={showErrorModal} onClose={() => setShowErrorModal(false)} title="System Diagnostics">
         <div className="space-y-6">
           <div className={`p-6 rounded-[2rem] border flex items-start gap-4 ${dbStatus === 'ERROR' ? 'bg-rose-50 border-rose-100 text-rose-800' : 'bg-emerald-50 border-emerald-100 text-emerald-800'}`}>
-            <AlertCircle className="w-6 h-6 shrink-0 mt-0.5" />
+            <Activity className="w-6 h-6 shrink-0 mt-0.5" />
             <div className="space-y-1">
-              <p className="text-sm font-black uppercase">Sync Protocol Status</p>
+              <p className="text-sm font-black uppercase">Protocol Diagnostics</p>
               <p className="text-xs opacity-80 leading-relaxed">
                 {dbStatus === 'ERROR' 
-                  ? `Ang server ay tumanggi sa huling request (Error: ${syncError || 'Permission Denied'}). Siguraduhin na ang Rules mo ay 'allow write: if true' at napindot ang 'PUBLISH'.` 
-                  : "Ang iyong connection sa cloud database ay established at healthy."}
+                  ? `Napigilan ang pag-delete dahil sa permission error (${syncError}). Mangyaring i-update ang Security Rules sa Firebase.` 
+                  : "Ang iyong app ay direkta nang kumukuha ng data mula sa Cloud (Memory-Only Cache). Wala nang dapat bumalik na ghost data."}
               </p>
             </div>
           </div>
+          
+          <div className="bg-slate-50 p-4 rounded-xl border border-slate-100 space-y-2">
+             <div className="flex justify-between text-[10px] font-black uppercase text-slate-400">
+                <span>Persistence</span>
+                <span className="text-rose-600">DISABLED (Strict Mode)</span>
+             </div>
+             <div className="flex justify-between text-[10px] font-black uppercase text-slate-400">
+                <span>Latency Control</span>
+                <span className="text-sky-600">CLOUD-FIRST</span>
+             </div>
+          </div>
+
           <button onClick={() => window.location.reload()} className="w-full py-4 bg-slate-900 text-white rounded-2xl font-black text-xs flex items-center justify-center gap-3 hover:bg-slate-800 transition-all">
-            <RefreshCw className="w-4 h-4" /> Force Hub Refresh
+            <RefreshCw className="w-4 h-4" /> Hard Refresh Session
           </button>
         </div>
       </Modal>
