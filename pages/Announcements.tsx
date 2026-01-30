@@ -57,6 +57,12 @@ const Announcements: React.FC<AnnouncementsProps> = ({ list, isAdmin, onAdd, onA
     setDate('');
   };
 
+  const confirmDelete = (id: string, title: string) => {
+    if (window.confirm(`Are you sure you want to permanently delete "${title}"? This action cannot be undone on the server.`)) {
+      onDelete(id);
+    }
+  };
+
   return (
     <div className="max-w-4xl mx-auto space-y-10 animate-in fade-in duration-500">
       <div className="flex items-center justify-between gap-6">
@@ -198,7 +204,10 @@ const Announcements: React.FC<AnnouncementsProps> = ({ list, isAdmin, onAdd, onA
                   <p className="text-slate-600 leading-relaxed font-medium text-lg">{ann.content}</p>
                 </div>
                 {isAdmin && (
-                  <button onClick={() => onDelete(ann.id)} className="self-start p-4 text-slate-300 hover:text-rose-500 hover:bg-rose-50 rounded-2xl transition-all active:scale-90">
+                  <button 
+                    onClick={() => confirmDelete(ann.id, ann.title)} 
+                    className="self-start p-4 text-slate-300 hover:text-rose-500 hover:bg-rose-50 rounded-2xl transition-all active:scale-90"
+                  >
                     <Trash2 className="w-6 h-6" />
                   </button>
                 )}

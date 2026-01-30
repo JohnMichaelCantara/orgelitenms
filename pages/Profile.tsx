@@ -1,18 +1,20 @@
 
 import React, { useState, useRef } from 'react';
 import { User, UserRole } from '../types';
-import { Camera, Save, Phone, User as UserIcon, Mail, Shield, Check, ArrowRight, Loader2 } from 'lucide-react';
+import { Camera, Save, Phone, User as UserIcon, Mail, Shield, Check, ArrowRight, Loader2, CloudCheck, CloudOff, RefreshCw } from 'lucide-react';
 
 interface ProfileProps {
   user: User;
   onSave: (user: User) => void;
+  onSyncCloud?: () => void;
   isInitialSetup?: boolean;
 }
 
-const Profile: React.FC<ProfileProps> = ({ user, onSave, isInitialSetup = false }) => {
+const Profile: React.FC<ProfileProps> = ({ user, onSave, onSyncCloud, isInitialSetup = false }) => {
   const [formData, setFormData] = useState<User>({ ...user });
   const [isEditing, setIsEditing] = useState(isInitialSetup);
   const [isUploading, setIsUploading] = useState(false);
+  const [syncing, setSyncing] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -34,6 +36,12 @@ const Profile: React.FC<ProfileProps> = ({ user, onSave, isInitialSetup = false 
     }
   };
 
+  const handleManualSync = () => {
+    setSyncing(true);
+    if (onSyncCloud) onSyncCloud();
+    setTimeout(() => setSyncing(false), 2000);
+  };
+
   return (
     <div className="max-w-3xl mx-auto animate-in fade-in slide-in-from-bottom-6 duration-700 pb-20 pt-4">
       {isInitialSetup && (
@@ -50,11 +58,20 @@ const Profile: React.FC<ProfileProps> = ({ user, onSave, isInitialSetup = false 
       )}
 
       <div className="bg-white rounded-[2.5rem] lg:rounded-[4rem] border border-slate-100 shadow-2xl shadow-slate-200/50 overflow-hidden relative">
-        {/* Banner with radial gradient */}
         <div className="h-40 lg:h-56 bg-slate-900 relative">
           <div className="absolute inset-0 opacity-20 bg-[radial-gradient(circle_at_50%_120%,#3b82f6,transparent)]" />
           
-          {/* Avatar positioning fix: centered on mobile, inset on desktop */}
+          <div className="absolute top-6 right-6 flex gap-3">
+             <button 
+              onClick={handleManualSync}
+              disabled={syncing}
+              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all ${syncing ? 'bg-white/10 text-white animate-pulse' : 'bg-white/20 text-white hover:bg-white/30 backdrop-blur-md border border-white/10'}`}
+             >
+                {syncing ? <RefreshCw className="w-3 h-3 animate-spin" /> : <CloudCheck className="w-3 h-3" />}
+                {syncing ? 'Syncing...' : 'Push to Cloud Registry'}
+             </button>
+          </div>
+
           <div className="absolute -bottom-14 left-1/2 -translate-x-1/2 lg:left-12 lg:translate-x-0 p-1.5 lg:p-2 bg-white rounded-[2rem] lg:rounded-[2.5rem] shadow-2xl z-20">
             <div className="relative group rounded-[1.6rem] lg:rounded-[2.2rem] overflow-hidden w-28 h-28 lg:w-40 lg:h-40 bg-slate-50">
               <img 
@@ -100,7 +117,7 @@ const Profile: React.FC<ProfileProps> = ({ user, onSave, isInitialSetup = false 
                 </span>
                 <div className="flex items-center gap-2">
                   <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
-                  <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Live Identity</span>
+                  <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Global Link Ready</span>
                 </div>
               </div>
             </div>

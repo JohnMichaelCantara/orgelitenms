@@ -8,16 +8,16 @@ import { User, Event, Announcement, GalleryItem, Notification, UserRole } from '
  */
 
 // Primary NMS Elite logo for portal header
-export const MAIN_LOGO = "https://lh3.googleusercontent.com/sitesv/APaQ0SQTUh4spZJeOeErFVpbrpbiYBMlK9dvkMc3w94Nf4jw5lYl5TsaKhS9gLWvR3TxhSYSLavQonR546dvpPCHXu7D_sviK4iG0YXBQmkiui1nRW_1o1pCN6De9gqdzR9kH4bHa7JOquzUDfhcl-_7B-keAaGRpz5ltpJfwI6So_JN_rzUjpvmJAmNd1nDjrguPC6goFAinoF3-ON3gr20nv8s-RZIS0ZW8H1l5AE=w1280";
+export const MAIN_LOGO = "https://lh3.googleusercontent.com/sitesv/APaQ0STzma6Cr7r5fy1y-iKLENGA5vPXdV7g9qEV5rxRXxQZMB8spMjHtqrOrDk2VCI5cXnq2_HmOHIRWs4-7EK80ewSdsn1aO5zCDQPNgQJkjxbaN2dRF62C7FkSygcO2MSKW6HXH2f5L7Ohwgm3pwFjgDa0o-YZ81b7yisVyc2C6scRfr1Pg_0uzt55lw=w1280";
 
 // The Three Organization Logos cluster
 export const LOGO_URLS = [
-  "https://lh3.googleusercontent.com/sitesv/APaQ0SR2ZElSkl0Fhs7wiVC6GnncThoAotKBdzWGvtNabv97BfZeQBK50kZ-gLk6MrmpsYtUT5lZyjuAXPMJ40tIgHBXmQXJx1HSIDXgOcy0usXH12kYltDj0V0-RcmyzEs6Of1K3pbd9Uh_ZM1xc6XpTgGU6SAPAyqoY8m9stSiuvfK-j0juyLdplICYus=w1280", // The Lites Press
-  "https://lh3.googleusercontent.com/sitesv/APaQ0SQTUh4spZJeOeErFVpbrpbiYBMlK9dvkMc3w94Nf4jw5lYl5TsaKhS9gLWvR3TxhSYSLavQonR546dvpPCHXu7D_sviK4iG0YXBQmkiui1nRW_1o1pCN6De9gqdzR9kH4bHa7JOquzUDfhcl-_7B-keAaGRpz5ltpJfwI6So_JN_rzUjpvmJAmNd1nDjrguPC6goFAinoF3-ON3gr20nv8s-RZIS0ZW8H1l5AE=w1280", // NMS Elite
-  "https://lh3.googleusercontent.com/sitesv/APaQ0SRNBjCXqZVaV9owPorJFp8AKcV35wSSj_t_nm19US9kx_NvSsRyYuFIvb2b-kkx7B_wdu3JkTwpod7EjyQeVnvQdkmGFdVNxhS-z-xWJ7S-hd9RlCs1AOPUdinuj_O7OloCaBipG7aS4Mwip_Cl1BCJ1UjgNUbrb6Vqxm9anJubNscHhQRt1YzI0Wrcg4TI5_7j4IjetZZGNkugz0I0SobHGCtgaFljoPcduRo=w1280"  // SSLG
+  "https://lh3.googleusercontent.com/sitesv/APaQ0SSEwJZQyXPHprIhSsmkGSWBGgCK-16PhE44zC4vd14gO-uJs1QZodQI9gIVBOE8b2I560F2cfFwlNzAY7l_uTWHvvdnpgCXxlPskxqy5Xw6f0CnbbgPZzTkdH-H0y9VGkBNvCTBCOft-WS65zClXgt1x-gQIhEAkQKV_CPfvNns9XQND3rY8Oso42SabQAus1YmL7cXqJBSr3zEHgyKvRhQR7cNpoQ_PO8ybR8=w1280", // The Lites Press
+  "https://lh3.googleusercontent.com/sitesv/APaQ0SRoI04sEAPRbpHVzVz0I6W-5nDRFzRklHegz7DmYaed_PlCgFm4jqu6bZvHBfkXGHJi1Tnn9C1AMvwKatJ_AjqbPq8JZ2JBON0N6GG-DmTbnFH3v_eyFjSvdfdUBda5o2tLmp2jd4OV0iqoYWzz_hHo_QpeLkTyKn3kmfvSS3RFYZFI_T1EarI3J60vpohODh1_PFt7v6_vmHvRrqNURwv2KICm0S0TEkxKkEY=w1280", // NMS Elite
+  "https://lh3.googleusercontent.com/sitesv/APaQ0SSSZPcrDc9aedxyJObNzIOoSyNKoSV9T5sRMI8cVD9DwwNWfVe_ijDKg3W35zU948vfEIZATxE7ioNhrxOaV1rrqem2T9I2OfuXRPUo0cQrxibaBmYhbx4ZJmYFCfq_LtdRNzORQRcN6G8pK7D3aQw95HtJnGEit_q6nE5NZwl8TpfWbDQYKg1mQ1cg-Y8IRvW6XgUR_0VZgd5P0ELzc7rd2TcPq6BPnk-86VM=w1280"  // SSLG
 ];
 
-export const DASHBOARD_BG = "https://lh3.googleusercontent.com/sitesv/APaQ0SQGRSpng51Foj2gQeNwuL3k4lHhTvxPBxVyAjESSVyw1fe-uDxMi7ARPm_Jkv7rgFcJ1Ru6b6gl-9M05yBYZ6ASeCTMk_-bjHR9aD8XJxLJyH-nZJ8FUwcaTgOpWZeN45fvBohwotK4cG52dRQnsaEDt3-VcT_M2YPIjeCeA-BVBNPiyJ0TAB-8qUSt7dJ6xgCI82mPILgTSFS0G1yFgQqKXNHnNXGmaWbU=w1280";
+export const DASHBOARD_BG = "https://lh3.googleusercontent.com/sitesv/APaQ0SSm_lEo4r53lOo2iQOjlJlQ8A1Rod1uGZ6OfnkLxhuwYnghFGcbVutSOLoi9VDU1Gi0Bu3PUcosnJNw1kMQDgByX3He_Dj41AldfW3jIoXi9RBlDMRt1rflaIrct337pmcuaqZKIQqQ_fda5uPC0TD-JwXi2DidFcubgZ_f9f9NvdpWgdRZsrFh_w2RYUl9-JpETmp0IfuyeIokBQXgqQKe9MnUlSPo8DFf=w1280";
 
 export const MOCK_USERS: User[] = [];
 export const INITIAL_EVENTS: Event[] = [];

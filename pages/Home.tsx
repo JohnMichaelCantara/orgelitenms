@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { User, Event, UserRole, Announcement, GalleryItem } from '../types';
-import { LOGO_URLS } from '../constants';
+import { LOGO_URLS, DASHBOARD_BG } from '../constants';
 import { 
   Calendar, ArrowRight, Upload, 
   Megaphone, Image as ImageIcon,
@@ -74,14 +74,24 @@ const Home: React.FC<HomeProps> = ({
 
   return (
     <div className="space-y-8 lg:space-y-12 animate-in fade-in slide-in-from-bottom-10 duration-700">
-      <section className="relative overflow-hidden gradient-pastel rounded-[2.5rem] lg:rounded-[4rem] p-8 lg:p-24 text-slate-900 shadow-2xl shadow-emerald-100/50">
+      {/* Hero Section with DASHBOARD_BG */}
+      <section className="relative overflow-hidden rounded-[2.5rem] lg:rounded-[4rem] p-8 lg:p-24 text-slate-900 shadow-2xl shadow-slate-200/50 min-h-[500px] flex items-center">
+        {/* Background Image Layer */}
+        <div 
+          className="absolute inset-0 z-0 opacity-60 bg-cover bg-center bg-no-repeat scale-105" 
+          style={{ backgroundImage: `url(${DASHBOARD_BG})` }} 
+        />
+        {/* Glassmorphism Overlays */}
+        <div className="absolute inset-0 bg-white/40 backdrop-blur-md z-0" />
+        <div className="absolute inset-0 bg-gradient-to-br from-white/60 via-transparent to-transparent z-0" />
+
         <div className="relative z-10 max-w-2xl">
           <div className="flex items-center gap-6 mb-10">
             <div className="flex items-center -space-x-4">
               {LOGO_URLS.map((url, i) => (
                 <div 
                   key={i} 
-                  className="w-14 h-14 lg:w-20 lg:h-20 bg-white rounded-2xl lg:rounded-[2.5rem] p-1.5 lg:p-3 shadow-2xl border border-white/50 transition-all hover:scale-110 hover:z-10 transform cursor-default flex items-center justify-center overflow-hidden" 
+                  className="w-14 h-14 lg:w-20 lg:h-20 bg-white rounded-2xl lg:rounded-[2.5rem] p-1.5 lg:p-3 shadow-2xl border border-white/80 transition-all hover:scale-110 hover:z-10 transform cursor-default flex items-center justify-center overflow-hidden" 
                   style={{ transform: `rotate(${i === 0 ? '-10deg' : i === 2 ? '10deg' : '0deg'}) translateY(${i === 1 ? '-4px' : '0px'})` }}
                 >
                    <img 
@@ -96,16 +106,16 @@ const Home: React.FC<HomeProps> = ({
                 </div>
               ))}
             </div>
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-white/40 rounded-full border border-white/50 backdrop-blur-xl">
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-white/60 rounded-full border border-white/50 backdrop-blur-xl shadow-sm">
               <Sparkles className="w-3 h-3 lg:w-4 h-4 text-sky-700" />
               <span className="text-[8px] lg:text-[10px] font-black uppercase tracking-[0.3em] text-sky-900">System Ready</span>
             </div>
           </div>
           
-          <h1 className="text-4xl lg:text-7xl font-black mb-6 leading-tight tracking-tighter text-slate-900">
+          <h1 className="text-4xl lg:text-7xl font-black mb-6 leading-tight tracking-tighter text-slate-900 drop-shadow-sm">
             {greeting}, <br className="hidden sm:block"/> {user.name.split(' ')[0]}.
           </h1>
-          <p className="text-base lg:text-xl text-slate-700 mb-10 max-w-md font-medium leading-relaxed opacity-80">
+          <p className="text-base lg:text-xl text-slate-800 mb-10 max-w-md font-bold leading-relaxed opacity-90">
             Explore the organizational hub. Access documentation, stay updated on events, and communicate with the community.
           </p>
           <div className="flex flex-wrap gap-4">
@@ -118,7 +128,7 @@ const Home: React.FC<HomeProps> = ({
             {isAdmin && (
               <button 
                 onClick={onManage} 
-                className="px-8 lg:px-12 py-4 lg:py-5 bg-white/40 text-slate-900 border border-white/60 rounded-2xl lg:rounded-[2rem] font-black text-sm lg:text-lg backdrop-blur-md transition-all hover:bg-white/70 hover:shadow-xl active:scale-95 flex items-center gap-2"
+                className="px-8 lg:px-12 py-4 lg:py-5 bg-white/60 text-slate-900 border border-white/80 rounded-2xl lg:rounded-[2rem] font-black text-sm lg:text-lg backdrop-blur-md transition-all hover:bg-white/80 hover:shadow-xl active:scale-95 flex items-center gap-2"
               >
                 <LayoutDashboard className="w-4 h-4 lg:w-6 h-6" />
                 Management Hub
@@ -126,7 +136,9 @@ const Home: React.FC<HomeProps> = ({
             )}
           </div>
         </div>
-        <div className="absolute top-0 right-0 -translate-y-1/2 translate-x-1/2 w-[400px] lg:w-[800px] h-[400px] lg:h-[800px] bg-white/40 rounded-full blur-[60px] lg:blur-[120px]"></div>
+        
+        {/* Subtle Decorative Elements */}
+        <div className="absolute bottom-0 right-0 w-[300px] lg:w-[600px] h-[300px] lg:h-[600px] bg-sky-400/10 rounded-full blur-[80px] lg:blur-[150px] -mr-32 -mb-32 z-0"></div>
       </section>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-12">
