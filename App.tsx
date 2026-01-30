@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback } from 'react';
 import { initializeApp, getApps } from "firebase/app";
 import { 
@@ -10,7 +9,6 @@ import {
   User, UserRole, Event, Announcement, GalleryItem, 
   UserRequest, Message, Notification, RequestStatus 
 } from './types';
-import { LOGO_URLS, MAIN_LOGO } from './constants';
 import Navbar from './components/Navbar';
 import Home from './pages/Home';
 import Gallery from './pages/Gallery';
@@ -22,7 +20,7 @@ import Register from './pages/Register';
 import AdminDashboard from './pages/AdminDashboard';
 import Profile from './pages/Profile';
 import Modal from './components/Modal';
-import { Loader2, CloudOff, CloudCheck, ExternalLink, RefreshCw, Database, AlertCircle, ShieldAlert } from 'lucide-react';
+import { Loader2, CloudOff, CloudCheck, ExternalLink, RefreshCw, Database, AlertCircle, ShieldAlert, CheckCircle2, Circle } from 'lucide-react';
 
 // --- DATABASE CONFIGURATION ---
 const firebaseConfig = {
@@ -54,13 +52,16 @@ const App: React.FC = () => {
   const [isNewUserSetup, setIsNewUserSetup] = useState(false);
   const [loading, setLoading] = useState(true);
   
-  const [firebaseError, setFirebaseError] = useState<string | null>(null);
   const [showErrorModal, setShowErrorModal] = useState(false);
   const [isFallbackMode, setIsFallbackMode] = useState(() => {
     return !isCloudConfigured || sessionStorage.getItem('fb_fallback') === 'true';
   });
 
-  // Local state initialized from local storage
+  // Checklist states for diagnostics
+  const [apiEnabled, setApiEnabled] = useState(false);
+  const [rulesConfigured, setRulesConfigured] = useState(false);
+
+  // Local state tracking
   const [users, setUsers] = useState<User[]>(() => JSON.parse(localStorage.getItem('db_users') || '[]'));
   const [events, setEvents] = useState<Event[]>(() => JSON.parse(localStorage.getItem('db_events') || '[]'));
   const [announcements, setAnnouncements] = useState<Announcement[]>(() => JSON.parse(localStorage.getItem('db_announcements') || '[]'));
@@ -69,7 +70,6 @@ const App: React.FC = () => {
   const [notifications, setNotifications] = useState<Notification[]>(() => JSON.parse(localStorage.getItem('db_notifications') || '[]'));
   const [messages, setMessages] = useState<Message[]>(() => JSON.parse(localStorage.getItem('db_messages') || '[]'));
 
-  // Session Restoration
   useEffect(() => {
     const savedUser = localStorage.getItem('nms_auth_user');
     if (savedUser) {
@@ -86,12 +86,13 @@ const App: React.FC = () => {
   }, []);
 
   const activateFallback = useCallback((reason: string) => {
-    setFirebaseError(reason);
     setIsFallbackMode(true);
     sessionStorage.setItem('fb_fallback', 'true');
+    
+    if (reason.includes("API")) setApiEnabled(false);
+    if (reason.includes("rules") || reason.includes("denied")) setRulesConfigured(false);
   }, []);
 
-  // Global Sync Engine
   const dbAction = (collectionName: string, action: 'ADD' | 'SET' | 'UPDATE' | 'DELETE', data?: any, id?: string) => {
     const storageKey = `db_${collectionName}`;
     const localData = JSON.parse(localStorage.getItem(storageKey) || '[]');
@@ -111,7 +112,6 @@ const App: React.FC = () => {
     
     localStorage.setItem(storageKey, JSON.stringify(updatedData));
     
-    // UI Update logic
     if (collectionName === 'users') setUsers(updatedData as User[]);
     else if (collectionName === 'events') setEvents(updatedData as Event[]);
     else if (collectionName === 'announcements') setAnnouncements(updatedData as Announcement[]);
@@ -120,16 +120,17 @@ const App: React.FC = () => {
     else if (collectionName === 'notifications') setNotifications(updatedData as Notification[]);
     else if (collectionName === 'messages') setMessages(updatedData as Message[]);
 
-    // Cloud Propagation
     if (!isFallbackMode && db) {
       (async () => {
         try {
           if (action === 'ADD' || action === 'SET') await setDoc(doc(db, collectionName, generatedId), data);
           else if (action === 'UPDATE' && generatedId) await updateDoc(doc(db, collectionName, generatedId), data);
           else if (action === 'DELETE' && generatedId) await deleteDoc(doc(db, collectionName, generatedId));
+          setRulesConfigured(true);
+          setApiEnabled(true);
         } catch (err: any) {
           if (err.message?.toLowerCase().includes('permission-denied') || err.code === 'permission-denied') {
-            activateFallback("Cloud Access Denied: Enable the Firestore API.");
+            activateFallback("Cloud Registry Access Denied: Check API and Security Rules.");
           }
         }
       })();
@@ -137,19 +138,20 @@ const App: React.FC = () => {
     return generatedId;
   };
 
-  // Listeners for Global Sync
   useEffect(() => {
     let unsubs: (() => void)[] = [];
     if (!isFallbackMode && db) {
       const handleError = (err: any) => {
         if (err.message?.toLowerCase().includes('permission-denied') || err.code === 'permission-denied') {
-          activateFallback("Identity Hub is offline. Enable the Firestore API to restore accounts.");
+          activateFallback("Connection blocked. Check API settings.");
         }
       };
       try {
         unsubs = [
           onSnapshot(collection(db, "users"), { 
             next: snap => {
+              setApiEnabled(true);
+              setRulesConfigured(true);
               const cloudUsers = snap.docs.map(d => ({ id: d.id, ...d.data() } as User));
               setUsers(prev => {
                 const merged = [...cloudUsers];
@@ -232,7 +234,7 @@ const App: React.FC = () => {
               }`}
            >
               {isFallbackMode ? <ShieldAlert className="w-4 h-4" /> : <CloudCheck className="w-4 h-4" />}
-              {isFallbackMode ? 'Restoration Pending' : 'Global Hub Linked'}
+              {isFallbackMode ? 'Action Needed: Global Sync' : 'Identity Hub Linked'}
            </button>
         </div>
 
@@ -244,39 +246,62 @@ const App: React.FC = () => {
         ) : renderContent()}
       </main>
 
-      <Modal isOpen={showErrorModal} onClose={() => setShowErrorModal(false)} title="Registry Diagnostics">
+      <Modal isOpen={showErrorModal} onClose={() => setShowErrorModal(false)} title="System Health Checklist">
         <div className="space-y-6">
           <div className={`p-6 rounded-[2rem] border flex items-start gap-4 ${isFallbackMode ? 'bg-amber-50 border-amber-100 text-amber-800' : 'bg-emerald-50 border-emerald-100 text-emerald-800'}`}>
             <Database className="w-6 h-6 shrink-0 mt-0.5" />
             <div className="space-y-1">
-              <p className="text-sm font-black uppercase tracking-tight">{isFallbackMode ? 'Cloud API Disabled' : 'Identity Sync Active'}</p>
+              <p className="text-sm font-black uppercase tracking-tight">{isFallbackMode ? 'Cloud Registry Offline' : 'Universal Sync Active'}</p>
               <p className="text-xs opacity-80 leading-relaxed">
                 {isFallbackMode 
-                  ? "Your Firestore API must be enabled in Google Cloud Console to allow cross-device account restoration." 
-                  : "Accounts are successfully restorable via phone number on any connected device."}
+                  ? "Your identity cannot be restored on other devices until the two steps below are completed in the Firebase Console." 
+                  : "All accounts are globally linked. Restoration via phone number identity pinning is operational."}
               </p>
             </div>
           </div>
           
-          {isFallbackMode && (
-            <div className="p-6 bg-slate-900 text-white rounded-[2rem] space-y-4">
-              <p className="text-xs font-bold leading-relaxed">
-                Click the button below to visit the Google Cloud Console for project <span className="text-sky-400">elite-35cbd</span> and click "ENABLE" to activate the database.
-              </p>
-              <a 
-                href="https://console.developers.google.com/apis/api/firestore.googleapis.com/overview?project=elite-35cbd" 
-                target="_blank" 
-                rel="noopener noreferrer" 
-                className="flex items-center justify-between p-4 bg-sky-600 text-white rounded-xl hover:bg-sky-500 transition-all font-black text-xs"
-              >
-                Enable Firestore API <ExternalLink className="w-4 h-4" />
-              </a>
+          <div className="space-y-3">
+            <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-2">Deployment Steps</h4>
+            
+            <div className="p-4 bg-white border border-slate-100 rounded-2xl flex items-center justify-between shadow-sm">
+              <div className="flex items-center gap-3">
+                {apiEnabled ? <CheckCircle2 className="w-5 h-5 text-emerald-500" /> : <Circle className="w-5 h-5 text-slate-200" />}
+                <div className="text-xs">
+                  <p className="font-black text-slate-800">1. Enable Firestore API</p>
+                  <p className="text-[10px] text-slate-400">Google Cloud Platform switch</p>
+                </div>
+              </div>
+              {!apiEnabled && (
+                <a href="https://console.developers.google.com/apis/api/firestore.googleapis.com/overview?project=elite-35cbd" target="_blank" className="p-2 bg-sky-50 text-sky-600 rounded-lg hover:bg-sky-600 hover:text-white transition-all">
+                  <ExternalLink className="w-4 h-4" />
+                </a>
+              )}
             </div>
-          )}
 
-          <button onClick={() => window.location.reload()} className="w-full py-4 bg-slate-100 text-slate-900 rounded-2xl font-black text-sm flex items-center justify-center gap-2">
-            <RefreshCw className="w-4 h-4" /> Re-sync Identity Registry
-          </button>
+            <div className="p-4 bg-white border border-slate-100 rounded-2xl flex items-center justify-between shadow-sm">
+              <div className="flex items-center gap-3">
+                {rulesConfigured ? <CheckCircle2 className="w-5 h-5 text-emerald-500" /> : <Circle className="w-5 h-5 text-slate-200" />}
+                <div className="text-xs">
+                  <p className="font-black text-slate-800">2. Set Security Rules</p>
+                  <p className="text-[10px] text-slate-400">Set 'allow read, write' in Firebase</p>
+                </div>
+              </div>
+              {!rulesConfigured && (
+                <a href="https://console.firebase.google.com/project/elite-35cbd/firestore/rules" target="_blank" className="p-2 bg-sky-50 text-sky-600 rounded-lg hover:bg-sky-600 hover:text-white transition-all">
+                  <ExternalLink className="w-4 h-4" />
+                </a>
+              )}
+            </div>
+          </div>
+
+          <div className="flex flex-col gap-3">
+            <button onClick={() => {
+              sessionStorage.removeItem('fb_fallback');
+              window.location.reload();
+            }} className="w-full py-4 bg-slate-100 text-slate-900 rounded-2xl font-black text-sm flex items-center justify-center gap-2 hover:bg-slate-200 transition-colors">
+              <RefreshCw className="w-4 h-4" /> Re-check Hub Status
+            </button>
+          </div>
         </div>
       </Modal>
 
