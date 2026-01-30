@@ -1,15 +1,25 @@
-
 import { User, Event, Announcement, GalleryItem, Notification, UserRole } from './types';
 
+/**
+ * LOGO MAPPING:
+ * 1. The Lites Press (Shield with 'n', 2004)
+ * 2. NMS Elite (Black/Silver Rectangle)
+ * 3. SSLG (Supreme Secondary Learner Government)
+ */
+
+// Primary NMS Elite logo for portal header
+export const MAIN_LOGO = "https://lh3.googleusercontent.com/sitesv/APaQ0SQTUh4spZJeOeErFVpbrpbiYBMlK9dvkMc3w94Nf4jw5lYl5TsaKhS9gLWvR3TxhSYSLavQonR546dvpPCHXu7D_sviK4iG0YXBQmkiui1nRW_1o1pCN6De9gqdzR9kH4bHa7JOquzUDfhcl-_7B-keAaGRpz5ltpJfwI6So_JN_rzUjpvmJAmNd1nDjrguPC6goFAinoF3-ON3gr20nv8s-RZIS0ZW8H1l5AE=w1280";
+
+// The Three Organization Logos cluster
 export const LOGO_URLS = [
-  "https://lh7-rt.googleusercontent.com/sitesz/AClOY7og2p7kMsIHGH2BlhnqWZCMzbeCRETHJZN8mS3UNrxrZD5s13e0_SL_rJkrHoto4zF9t0x66FDsBmF-ZJ4VNg2KwUqmOkMKUzEEmFgpT5ucPI8gV59T1vGEx9sqmiCrOZ57_atM29IhIC0q0bOxhABCJgPm3EjnpiG_q_VVH-VOR6Fwu49QoYNcmLIXkcOF?key=W_u8fiN7_oF3X6TwKcWtFg",
-  "https://lh7-rt.googleusercontent.com/sitesz/AClOY7og0xVECOuvUJUdRkAXoonn-Cnlo2ZYoSYN4IEc00GOgPGsXtDKKmvHZ6wK-z_N0WY68w_ZqDoCRqOXtR6UVJObMH4Yc-L7uL32ynwO_kaTx5cTOdSuj4huBHK4JzRL-DEclFDsIDQvIljNldIQYzdwqOPRs9PrbK3-0qnHh2X1UJL3ws1Bymr9Gd319jVf?key=W_u8fiN7_oF3X6TwKcWtFg",
-  "https://lh7-rt.googleusercontent.com/sitesz/AClOY7o2dEJswiWaORavWpfqb6k4lsA2pLjd5OUe-ot87nB8XJvwDIlQG0fACdUQtH52uIv6QTmFYp4qYeIsMiawD8o9NTB5BflvsstPFCrR9hARJWKcCaHvsML9XYtoXcU0J311qcq8SvqwdHzk9od_6fgSSMczfXr0Q4BgOh-S0jrPtJaeUA9FxLeM6-I94C7h?key=W_u8fiN7_oF3X6TwKcWtFg"
+  "https://lh3.googleusercontent.com/sitesv/APaQ0SR2ZElSkl0Fhs7wiVC6GnncThoAotKBdzWGvtNabv97BfZeQBK50kZ-gLk6MrmpsYtUT5lZyjuAXPMJ40tIgHBXmQXJx1HSIDXgOcy0usXH12kYltDj0V0-RcmyzEs6Of1K3pbd9Uh_ZM1xc6XpTgGU6SAPAyqoY8m9stSiuvfK-j0juyLdplICYus=w1280", // The Lites Press
+  "https://lh3.googleusercontent.com/sitesv/APaQ0SQTUh4spZJeOeErFVpbrpbiYBMlK9dvkMc3w94Nf4jw5lYl5TsaKhS9gLWvR3TxhSYSLavQonR546dvpPCHXu7D_sviK4iG0YXBQmkiui1nRW_1o1pCN6De9gqdzR9kH4bHa7JOquzUDfhcl-_7B-keAaGRpz5ltpJfwI6So_JN_rzUjpvmJAmNd1nDjrguPC6goFAinoF3-ON3gr20nv8s-RZIS0ZW8H1l5AE=w1280", // NMS Elite
+  "https://lh3.googleusercontent.com/sitesv/APaQ0SRNBjCXqZVaV9owPorJFp8AKcV35wSSj_t_nm19US9kx_NvSsRyYuFIvb2b-kkx7B_wdu3JkTwpod7EjyQeVnvQdkmGFdVNxhS-z-xWJ7S-hd9RlCs1AOPUdinuj_O7OloCaBipG7aS4Mwip_Cl1BCJ1UjgNUbrb6Vqxm9anJubNscHhQRt1YzI0Wrcg4TI5_7j4IjetZZGNkugz0I0SobHGCtgaFljoPcduRo=w1280"  // SSLG
 ];
 
-export const MOCK_USERS: User[] = [];
+export const DASHBOARD_BG = "https://lh3.googleusercontent.com/sitesv/APaQ0SQGRSpng51Foj2gQeNwuL3k4lHhTvxPBxVyAjESSVyw1fe-uDxMi7ARPm_Jkv7rgFcJ1Ru6b6gl-9M05yBYZ6ASeCTMk_-bjHR9aD8XJxLJyH-nZJ8FUwcaTgOpWZeN45fvBohwotK4cG52dRQnsaEDt3-VcT_M2YPIjeCeA-BVBNPiyJ0TAB-8qUSt7dJ6xgCI82mPILgTSFS0G1yFgQqKXNHnNXGmaWbU=w1280";
 
-// Starting with empty content as requested to test "from the start"
+export const MOCK_USERS: User[] = [];
 export const INITIAL_EVENTS: Event[] = [];
 export const INITIAL_ANNOUNCEMENTS: Announcement[] = [];
 export const INITIAL_GALLERY: GalleryItem[] = [];

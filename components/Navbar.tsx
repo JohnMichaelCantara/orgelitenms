@@ -1,7 +1,6 @@
-
 import React, { useState } from 'react';
 import { User, UserRole } from '../types';
-import { LOGO_URLS } from '../constants';
+import { MAIN_LOGO } from '../constants';
 import { 
   Home, Image, Bell, MessageSquare, 
   Megaphone, ShieldCheck, LogOut, Menu, X
@@ -35,33 +34,32 @@ const Navbar: React.FC<NavbarProps> = ({ user, current, navigate, logout, notifi
     setIsOpen(false);
   };
 
-  const fallbacks = ["N", "M", "S"];
-
   return (
     <nav className="sticky top-0 z-50 bg-white/95 backdrop-blur-xl border-b border-slate-100 shadow-sm">
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16 lg:h-20">
           <div className="flex items-center gap-2 lg:gap-8">
-            <div className="flex items-center -space-x-1.5 lg:-space-x-2">
-              {LOGO_URLS.map((url, idx) => (
-                <div key={idx} className="w-8 h-8 lg:w-12 lg:h-12 rounded-lg lg:rounded-xl bg-white border border-slate-100 shadow-sm overflow-hidden p-1 flex items-center justify-center transition-transform hover:scale-110 active:scale-95">
-                  <img 
-                    src={url} 
-                    alt={`Logo ${idx + 1}`} 
-                    referrerPolicy="no-referrer"
-                    className="w-full h-full object-contain"
-                    loading="lazy"
-                    onError={(e) => {
-                      (e.target as HTMLImageElement).src = `https://api.dicebear.com/7.x/initials/svg?seed=${fallbacks[idx]}&backgroundColor=${idx === 2 ? '0f172a' : 'f1f5f9'}&textColor=${idx === 2 ? 'ffffff' : '475569'}&fontSize=50`;
-                    }}
-                  />
-                </div>
-              ))}
+            <div className="flex items-center">
+              <div className="w-10 h-10 lg:w-14 lg:h-14 rounded-lg lg:rounded-xl bg-white border border-slate-100 shadow-sm overflow-hidden p-1 flex items-center justify-center transition-transform hover:scale-110 active:scale-95">
+                <img 
+                  src={MAIN_LOGO} 
+                  alt="NMS Logo" 
+                  referrerPolicy="no-referrer"
+                  className="w-full h-full object-contain"
+                  loading="lazy"
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).src = `https://api.dicebear.com/7.x/initials/svg?seed=NMS&backgroundColor=0f172a&textColor=ffffff`;
+                  }}
+                />
+              </div>
             </div>
             <div className="hidden sm:block border-l border-slate-100 pl-4 lg:pl-6 cursor-pointer select-none" onClick={() => handleNav('HOME')}>
-              <h1 className="text-sm lg:text-base font-black text-slate-900 tracking-tighter leading-none">
-                PORTAL<br/><span className="text-sky-500 text-[8px] lg:text-[10px] tracking-widest uppercase font-bold">Community Hub</span>
-              </h1>
+              <div className="flex flex-col">
+                <h1 className="text-sm lg:text-base font-black text-slate-900 tracking-tighter leading-none">
+                  "NMS ORGBRIDGE"
+                </h1>
+                <span className="text-sky-500 text-[8px] lg:text-[10px] tracking-widest uppercase font-bold mt-0.5">Student Organization Portal</span>
+              </div>
             </div>
           </div>
 
