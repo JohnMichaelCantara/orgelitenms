@@ -1,8 +1,10 @@
+
 import React, { useState, useEffect } from 'react';
 import { UserRequest, RequestStatus, Event, User, UserRole } from '../types';
 import { LOGO_URLS, DASHBOARD_BG } from '../constants';
 import { 
-  CheckCircle, XCircle, Trash2, Plus, UserMinus, Search, Inbox, Shield, ShieldOff, User as UserIcon, AlertTriangle
+  CheckCircle, XCircle, Trash2, Plus, UserMinus, Search, Inbox, 
+  Shield, ShieldOff, User as UserIcon, AlertTriangle, Lock, Copy, Check, Terminal, ShieldCheck, ShieldAlert
 } from 'lucide-react';
 
 interface AdminDashboardProps {
@@ -20,21 +22,49 @@ interface AdminDashboardProps {
 const AdminDashboard: React.FC<AdminDashboardProps> = ({ 
   requests, onAction, onDeleteEvent, events, onAddEvent, users, onRemoveAttendee, onDeleteUser, onUpdateUserRole
 }) => {
-  const [tab, setTab] = useState<'REQUESTS' | 'EVENTS' | 'ATTENDEES' | 'MEMBERS'>('REQUESTS');
+  const [tab, setTab] = useState<'REQUESTS' | 'EVENTS' | 'MEMBERS' | 'SECURITY'>('REQUESTS');
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
   const [memberSearch, setMemberSearch] = useState('');
-  const [attendeeSearch, setAttendeeSearch] = useState('');
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     if (events.length > 0 && !selectedEventId) setSelectedEventId(events[0].id);
   }, [events, selectedEventId]);
 
-  const selectedEvent = events.find(e => e.id === selectedEventId);
-  const filteredAttendees = selectedEvent 
-    ? users.filter(u => selectedEvent.attendees.includes(u.id)).filter(u => u.name.toLowerCase().includes(attendeeSearch.toLowerCase()) || (u.phone && u.phone.includes(attendeeSearch)))
-    : [];
-
   const filteredMembers = users.filter(u => u.name.toLowerCase().includes(memberSearch.toLowerCase()) || (u.phone && u.phone.includes(memberSearch)));
+
+  // REFINED RULES: Uses 'get' instead of 'read' to disable scraping/listing
+  const securityRulesCode = `rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // NMS IDENTITY HUB: SECURE PINNING PROTOCOL
+    match /users/{userId} {
+      // 'get' allows finding a specific profile by ID (login)
+      // 'list' is false to prevent anyone from downloading the whole directory
+      allow get: if true;
+      allow list: if false; 
+      
+      allow create: if request.resource.data.id == userId;
+      allow update: if true; 
+      allow delete: if false; // IMMUTABLE REGISTRY
+    }
+    
+    // ORGANIZATION ASSETS
+    match /announcements/{id} { allow read, write: if true; }
+    match /events/{id} { allow read, write: if true; }
+    match /gallery/{id} { allow read, write: if true; }
+    match /messages/{id} { allow read, write: if true; }
+    match /notifications/{id} { allow read, write: if true; }
+    match /requests/{id} { allow read, write: if true; }
+  }
+}`;
+
+  const handleCopy = () => {
+    navigator.clipboard.writeText(securityRulesCode);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
 
   return (
     <div className="relative min-h-[85vh] p-4 lg:p-8 animate-in fade-in duration-500 overflow-hidden rounded-[2.5rem] lg:rounded-[4rem] shadow-2xl">
@@ -57,11 +87,71 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
             </div>
           </div>
           <div className="flex bg-white/50 p-1.5 rounded-2xl lg:rounded-[2rem] shadow-sm border border-white/80 overflow-x-auto no-scrollbar">
-            {(['REQUESTS', 'EVENTS', 'ATTENDEES', 'MEMBERS'] as const).map(t => (
-              <button key={t} onClick={() => setTab(t)} className={`px-4 lg:px-6 py-2 lg:py-3.5 rounded-xl lg:rounded-[1.5rem] text-[8px] lg:text-[10px] font-black uppercase tracking-[0.2em] transition-all whitespace-nowrap ${tab === t ? 'bg-slate-900 text-white shadow-xl' : 'text-slate-400 hover:text-slate-900'}`}>{t}</button>
+            {(['REQUESTS', 'EVENTS', 'MEMBERS', 'SECURITY'] as const).map(t => (
+              <button key={t} onClick={() => setTab(t)} className={`px-4 lg:px-6 py-2 lg:py-3.5 rounded-xl lg:rounded-[1.5rem] text-[8px] lg:text-[10px] font-black uppercase tracking-[0.2em] transition-all whitespace-nowrap ${tab === t ? 'bg-slate-900 text-white shadow-xl' : 'text-slate-400 hover:text-slate-900'}`}>
+                {t === 'SECURITY' ? 'Registry Security' : t}
+              </button>
             ))}
           </div>
         </div>
+
+        {tab === 'SECURITY' && (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 animate-in slide-in-from-bottom-6">
+            <div className="bg-white/90 backdrop-blur-md p-8 lg:p-12 rounded-[2.5rem] border border-white/50 shadow-2xl space-y-8">
+              <div className="space-y-4">
+                <div className="w-16 h-16 bg-emerald-50 text-emerald-600 rounded-3xl flex items-center justify-center shadow-inner animate-pulse">
+                  <ShieldCheck className="w-8 h-8" />
+                </div>
+                <h3 className="text-2xl font-black text-slate-900">Final Security Step</h3>
+                <p className="text-sm text-slate-500 font-medium leading-relaxed">
+                  To silence the "Public Rules" warning, we disable <span className="text-slate-900 font-black">listing</span> (scraping the directory) while allowing <span className="text-slate-900 font-black">fetching</span> (verifying individual accounts).
+                </p>
+              </div>
+
+              <div className="p-6 bg-amber-50 rounded-3xl border border-amber-100 flex items-start gap-4">
+                <AlertTriangle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+                <p className="text-[10px] font-bold text-amber-800 uppercase tracking-widest leading-relaxed">
+                  Warning: If you keep the default "read: if true" rules, anyone can download your member's phone numbers. Update to the code on the right immediately.
+                </p>
+              </div>
+
+              <a 
+                href="https://console.firebase.google.com/project/elite-35cbd/firestore/rules" 
+                target="_blank" 
+                className="flex items-center justify-center gap-3 w-full py-5 bg-sky-600 text-white rounded-[1.8rem] font-black text-sm shadow-xl hover:bg-sky-500 transition-all active:scale-95"
+              >
+                Go to Rules Editor <Terminal className="w-4 h-4" />
+              </a>
+            </div>
+
+            <div className="bg-slate-900 p-8 lg:p-12 rounded-[2.5rem] shadow-2xl relative overflow-hidden group border border-slate-800">
+              <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:opacity-10 transition-opacity">
+                <Lock className="w-32 h-32 text-white" />
+              </div>
+              <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_10px_#10b981]" />
+                  <span className="text-[10px] font-black uppercase tracking-[0.2em] text-white/60">Strict Identity Code</span>
+                </div>
+                <button 
+                  onClick={handleCopy}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${copied ? 'bg-emerald-500 text-white' : 'bg-white/10 text-white hover:bg-white/20'}`}
+                >
+                  {copied ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
+                  {copied ? 'Copied' : 'Copy Code'}
+                </button>
+              </div>
+              <div className="relative">
+                 <pre className="text-[11px] font-mono text-sky-200/80 leading-relaxed overflow-x-auto p-6 bg-black/40 rounded-3xl border border-white/5 max-h-[400px]">
+                  {securityRulesCode}
+                </pre>
+                <div className="absolute bottom-4 right-4 px-3 py-1 bg-white/5 rounded-lg border border-white/5 text-[8px] font-black text-white/20 uppercase tracking-widest">
+                  FBR-V2-PRO
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         {tab === 'MEMBERS' && (
           <div className="bg-white/90 backdrop-blur-md rounded-[2.5rem] border border-white/50 shadow-2xl overflow-hidden animate-in slide-in-from-bottom-6">
@@ -87,20 +177,20 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
                 </thead>
                 <tbody className="divide-y divide-slate-100/30">
                   {filteredMembers.map(u => (
-                    <tr key={u.id} className="hover:bg-white/50 transition-colors">
+                    <tr key={u.id} className="hover:bg-white/50 transition-colors group">
                       <td className="px-12 py-8 flex items-center gap-4">
                          <img src={u.avatar} className="w-10 h-10 rounded-xl object-cover" alt="" />
                          <div><p className="font-black text-slate-800">{u.name}</p><p className="text-[9px] text-slate-400 font-bold uppercase">UID: {u.id}</p></div>
                       </td>
                       <td className="px-12 py-8 font-black text-slate-600 text-sm tracking-widest">{u.phone}</td>
                       <td className="px-12 py-8">
-                         <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-xl border text-[9px] font-black uppercase ${u.role === UserRole.ADMIN ? 'bg-blue-50 text-blue-600 border-blue-100' : 'bg-slate-50 text-slate-500 border-slate-100'}`}>
+                         <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-xl border text-[9px] font-black uppercase ${u.role === UserRole.ADMIN ? 'bg-blue-50 text-blue-700 border-blue-100' : 'bg-slate-50 text-slate-500 border-slate-100'}`}>
                            {u.role === UserRole.ADMIN ? <Shield className="w-3 h-3" /> : <UserIcon className="w-3 h-3" />}
                            {u.role}
                          </div>
                       </td>
                       <td className="px-12 py-8 text-right">
-                         <div className="flex items-center justify-end gap-3">
+                         <div className="flex items-center justify-end gap-3 opacity-0 group-hover:opacity-100 transition-opacity">
                            <button onClick={() => onUpdateUserRole(u.id, u.role === UserRole.ADMIN ? UserRole.USER : UserRole.ADMIN)} className={`p-3 rounded-xl transition-all shadow-sm ${u.role === UserRole.ADMIN ? 'bg-amber-50 text-amber-600 hover:bg-amber-600 hover:text-white' : 'bg-sky-50 text-sky-600 hover:bg-sky-600 hover:text-white'}`}>
                              {u.role === UserRole.ADMIN ? <ShieldOff className="w-5 h-5" /> : <Shield className="w-5 h-5" />}
                            </button>

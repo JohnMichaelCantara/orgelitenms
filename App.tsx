@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useCallback } from 'react';
 import { initializeApp, getApps } from "firebase/app";
 import { 
@@ -82,7 +83,7 @@ const App: React.FC = () => {
       }
     }
     const timer = setTimeout(() => setLoading(false), 800);
-    return () => clearTimeout(timer);
+    return () => setLoading(false);
   }, []);
 
   const activateFallback = useCallback((reason: string) => {
@@ -193,7 +194,7 @@ const App: React.FC = () => {
   const renderContent = () => {
     if (!currentUser) {
       if (currentPage === 'REGISTER') return <Register users={users} db={db} onRegister={(u) => handleAuthSuccess(u, true)} onSwitchToLogin={() => setCurrentPage('LOGIN')} />;
-      return <Login users={users} db={db} onLogin={(u) => handleAuthSuccess(u, false)} onSwitchToRegister={() => setCurrentPage('REGISTER')} />;
+      return <Login users={users} db={db} onLogin={(u) => handleAuthSuccess(u, false)} onSwitchToRegister={() => setCurrentPage('REGISTER')} onTroubleshoot={() => setShowErrorModal(true)} />;
     }
 
     switch (currentPage) {

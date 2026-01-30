@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { ArrowRight, AlertCircle, Loader2, Key, Database } from 'lucide-react';
+import { ArrowRight, AlertCircle, Loader2, Key, Database, Settings } from 'lucide-react';
 import { doc, getDoc } from "firebase/firestore";
 import { User } from '../types';
 import { LOGO_URLS } from '../constants';
@@ -10,15 +10,17 @@ interface LoginProps {
   db: any;
   onLogin: (user: User) => void;
   onSwitchToRegister: () => void;
+  onTroubleshoot?: () => void; // Added to trigger the diagnostic modal in App.tsx
 }
 
-const Login: React.FC<LoginProps> = ({ users, db, onLogin, onSwitchToRegister }) => {
+const Login: React.FC<LoginProps> = ({ users, db, onLogin, onSwitchToRegister, onTroubleshoot }) => {
   const [step, setStep] = useState(1); 
   const [isVerifying, setIsVerifying] = useState(false);
   const [phone, setPhone] = useState('');
   const [otp, setOtp] = useState('');
   const [generatedOtp, setGeneratedOtp] = useState('');
   const [error, setError] = useState('');
+  const [isApiError, setIsApiError] = useState(false);
 
   const sanitizePhone = (val: string) => {
     let cleaned = val.replace(/\D/g, '');
@@ -29,6 +31,7 @@ const Login: React.FC<LoginProps> = ({ users, db, onLogin, onSwitchToRegister })
   const handlePhoneSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    setIsApiError(false);
     
     const phoneToSearch = sanitizePhone(phone);
     const fullPhone = '+63' + phoneToSearch;
@@ -37,10 +40,8 @@ const Login: React.FC<LoginProps> = ({ users, db, onLogin, onSwitchToRegister })
     if (step === 1) {
       setIsVerifying(true);
       
-      // Step A: Check local cache first
       let user = users.find(u => u.phone === fullPhone) || users.find(u => u.id === deterministicId);
 
-      // Step B: RESTORATION - Query the Global Cloud Database (Crucial for new devices)
       if (!user && db) {
         try {
           const userDoc = await getDoc(doc(db, "users", deterministicId));
@@ -48,8 +49,10 @@ const Login: React.FC<LoginProps> = ({ users, db, onLogin, onSwitchToRegister })
             user = { id: userDoc.id, ...userDoc.data() } as User;
           }
         } catch (err: any) {
+          console.error("Restoration Error:", err);
           if (err.message?.toLowerCase().includes('permission-denied') || err.code === 'permission-denied') {
-            setError("Sync Required: Cloud Database API is disabled. Account restoration is currently limited.");
+            setError("Cloud Registry Blocked: Your Firestore API is disabled. Click the button below to fix.");
+            setIsApiError(true);
             setIsVerifying(false);
             return;
           }
@@ -62,7 +65,6 @@ const Login: React.FC<LoginProps> = ({ users, db, onLogin, onSwitchToRegister })
         return;
       }
 
-      // Identity Found -> Start Handshake
       setTimeout(() => {
         const code = Math.floor(100000 + Math.random() * 900000).toString();
         setGeneratedOtp(code);
@@ -74,14 +76,16 @@ const Login: React.FC<LoginProps> = ({ users, db, onLogin, onSwitchToRegister })
         const phoneToSearch = sanitizePhone(phone);
         const deterministicId = `user_${phoneToSearch}`;
         
-        // Final restoration check
         const user = users.find(u => u.id === deterministicId);
         if (user) {
           onLogin(user);
         } else if (db) {
-          // Rescue fetch if state is async
-          const userDoc = await getDoc(doc(db, "users", deterministicId));
-          if (userDoc.exists()) onLogin({ id: userDoc.id, ...userDoc.data() } as User);
+          try {
+            const userDoc = await getDoc(doc(db, "users", deterministicId));
+            if (userDoc.exists()) onLogin({ id: userDoc.id, ...userDoc.data() } as User);
+          } catch(e) {
+            setError("Session Handshake Blocked: The Global Registry API is offline.");
+          }
         }
       } else {
         setError('Verification Failure: Handshake code mismatch.');
@@ -104,9 +108,19 @@ const Login: React.FC<LoginProps> = ({ users, db, onLogin, onSwitchToRegister })
       </div>
 
       {error && (
-        <div className="mb-8 p-6 bg-rose-50 border border-rose-100 rounded-[2rem] flex items-start gap-4 animate-in shake">
-          <AlertCircle className="w-6 h-6 text-rose-500 shrink-0 mt-0.5" />
-          <p className="text-xs font-bold text-rose-600 leading-tight">{error}</p>
+        <div className="mb-8 p-6 bg-rose-50 border border-rose-100 rounded-[2.5rem] space-y-4 animate-in shake">
+          <div className="flex items-start gap-4">
+            <AlertCircle className="w-6 h-6 text-rose-500 shrink-0 mt-0.5" />
+            <p className="text-xs font-bold text-rose-600 leading-tight">{error}</p>
+          </div>
+          {isApiError && onTroubleshoot && (
+            <button 
+              onClick={onTroubleshoot}
+              className="w-full py-3 bg-white border border-rose-200 text-rose-600 rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-rose-500 hover:text-white transition-all shadow-sm"
+            >
+              <Settings className="w-3 h-3" /> Troubleshoot Connection
+            </button>
+          )}
         </div>
       )}
 
